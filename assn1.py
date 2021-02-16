@@ -14,6 +14,9 @@ import os
 from matplotlib import pyplot as plt
 from IPython import embed
 import timeit
+from mpl_toolkits import mplot3d
+from matplotlib import cm
+#from mayavi import mlab
 
 class Particle:
 	def __init__(self, x0, bounds, params):
@@ -62,13 +65,16 @@ class PSO:
 		self.swarm = [Particle(x0,bounds,params) for i in range(numParticles)]
 		self.params = params
 
-	def optimize(self,verbose=False,getResults=False):
+	def optimize(self,verbose=False,getResults=False,getAllResults=False):
+		allCostVals = []
 		for idx in range(self.maxIter):
 			for particle in self.swarm:
 				particle.calc(self.costFunc, idx)
 				if self.costBestVal is None or particle.val < self.costBestVal:
 					self.costBestVal = particle.val
 					self.posGlobBest = particle.pos
+					if getAllResults:
+						allCostVals.append(append(particle.pos,particle.val))
 			
 			if self.costBestVal <= self.params['rel_tol'] and self.iterGlobBest is None:
 				self.iterGlobBest = idx
@@ -79,11 +85,13 @@ class PSO:
 			if verbose:
 				print('Iter: {}/{} - CostFunc: {}, val: {}'.format(idx,self.maxIter,self.posGlobBest,self.costBestVal))
 		print('Finished PSO!\nCostFunc: {}, val: {}'.format(self.posGlobBest,self.costBestVal))
-		if getResults:
+		if getResults or getAllResults:
 			results = {'val': self.costBestVal, 'x*': self.posGlobBest, 'iter': self.iterGlobBest, 'relTolPass': True}
 			if self.iterGlobBest is None:
 				results['iter'] = idx
 				results['relTolPass'] = False
+			if getAllResults:
+				results['allCostVals'] = array(allCostVals)
 			return results
 
 def P1(x,**kwargs):
@@ -122,7 +130,11 @@ def P4(x,**kwargs):
 	gx1 = 0.75 - prod(x)
 	gx2 = prod(x) - (15*len(x)/2.)
 	fx = -abs(t1-2*t2)/sqrt(t3)
+	if isnan(fx):
+		fx = 0
 	psi = max([0,gx1])**2 + max([0,gx2])**2
+	if 'onlyFx' in kwargs.keys() and kwargs['onlyFx']:
+		return fx
 	return (fx + kwargs['penaltyParam']*psi)
 
 class P5:
@@ -171,20 +183,59 @@ def runPS3():
 	P3opt = PSO(P3,x0,bounds,numParticles=800,maxIter=100,params=params)
 	P3opt.optimize(verbose=True)
 
-def runPS4():
+def runPS4(xSizes):
 	print('PS4:\n')
-	for n in [2,10]:
+	results = {}
+	for n in xSizes:
 		bounds = array([(0,10)]*n)
-		x0 = random.uniform(0,10,n)
+		x0 = random.uniform(0,3,n)
 		params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.}
 		P3opt = PSO(P4,x0,bounds,numParticles=500,maxIter=200,params=params)
-		P3opt.optimize(verbose=True,getResults=True)
+		results[n] = P3opt.optimize(verbose=True,getAllResults=True)
+	return results
 
 #runPS1()
 #runPS3()
-runPS4()
+a = runPS4([2])
+
 # P2
 #n = 2
 #bounds = [(-5,5)]*n
 
 # P3
+
+x = linspace(0, 10, 50)
+y = linspace(0, 10, 50)
+X, Y = meshgrid(x, y)
+Z = []
+xx = X.flatten()
+yy = Y.flatten()
+params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.}
+for idx in range(xx.size): 	
+	Z.append(P4(x=array([xx[idx], yy[idx]]),onlyFx=True))
+Z = array(Z).reshape(X.shape)
+#'''
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+#ax.plot_wireframe(X, Y, Z, color='green')
+ax = plt.axes(projection='3d')
+
+ax.scatter(*a[2]['allCostVals'].T,zorder=1)
+ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
+                cmap=cm.coolwarm, edgecolor='none', antialiased=True, zorder=2)
+
+ax.set_xlabel('$x_1$')
+ax.set_ylabel('$x_2$')
+ax.set_zlabel('$f(x_n)$')
+ax.set_title('P4: Bump Function');
+
+plt.show()
+'''
+# Display it
+mlab.figure(size=(400, 300))
+mlab.surf(X,Y,Z)
+
+# A view into the "Canyon"
+#mlab.view(65, 27, 322, [30., -13.7,  136])
+mlab.show()
+'''
