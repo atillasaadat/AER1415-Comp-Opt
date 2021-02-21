@@ -208,7 +208,7 @@ def runPS4(xSizes, params):
 #bounds = [(-5,5)]*n
 
 # P3
-def plotPS4_3D(ps4Results, params):
+def plotPS4_3D(ps4Results):
 	x = linspace(0, 10, 100)
 	y = linspace(0, 10, 100)
 	X, Y = meshgrid(x, y)
@@ -266,7 +266,7 @@ def plotPS4_iter(paramCombinations=paramCombinations):
 	embed()
 
 
-
-plotPS4_iter()
-#ps4Results = runPS4([2],{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.})
+#plotPS4_iter()
+paramsT = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.}
+plotPS4_3D(runPS4([2],paramsT))
 
