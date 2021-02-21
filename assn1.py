@@ -16,7 +16,9 @@ from IPython import embed
 import timeit
 from mpl_toolkits import mplot3d
 from matplotlib import cm
+import matplotlib
 
+matplotlib.use('TkAgg')
 class Particle:
 	def __init__(self, x0, bounds, params):
 		self.pos = array(x0[:])
@@ -71,16 +73,18 @@ class PSO:
 			for particle in self.swarm:
 				particle.calc(self.costFunc, idx)
 				if self.costBestVal is None or particle.val < self.costBestVal:
+					self.currentDiff = abs(self.costBestVal-particle.val) if idx != 0 else None
+					if idx == 1 and self.currentDiff is None:
+						embed()
 					self.costBestVal = particle.val
 					self.posGlobBest = particle.pos
-					self.currentDiff = self.costBestVal if self.currentDiff is not None else self.costBestVal
-					embed()
-					if getAllResults:
-						allCostVals.append(append(particle.pos,[particle.val,self.currentDiff]))
-				self.currentDiff = abs(self.currentDiff-self.costBestVal)
-			
-			if self.currentDiff <= self.params['rel_tol'] and self.iterGlobBest is None:
-				self.iterGlobBest = idx
+			if getAllResults:
+				allCostVals.append(append(self.posGlobBest,[self.costBestVal,self.currentDiff]))
+			try:
+				if idx != 0 and abs(self.currentDiff) <= self.params['rel_tol'] and self.iterGlobBest is None:
+					self.iterGlobBest = idx
+			except:
+				embed()
 
 			for particle in self.swarm:
 				particle.update_velocity(self.posGlobBest)
@@ -168,7 +172,7 @@ class P5:
 # P1
 def runPS1():
 	print('PS1:\n')
-	params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289,'rel_tol': 1e-9}
+	params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289,'rel_tol': 1e-10}
 	for n in [2,5]:
 		bounds = array([(-5,5)]*n)
 		x0 = random.uniform(-5,5,n)
@@ -182,7 +186,7 @@ def runPS3():
 	n=2
 	bounds = array([(-1,1)]*n)
 	x0 = random.uniform(-1,1,n)
-	params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.}
+	params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.}
 	P3opt = PSO(P3,x0,bounds,numParticles=800,maxIter=100,params=params)
 	P3opt.optimize(verbose=True)
 
@@ -192,7 +196,7 @@ def runPS4(xSizes, params):
 	for n in xSizes:
 		bounds = array([(0,10)]*n)
 		x0 = random.uniform(0,3,n)
-		P3opt = PSO(P4,x0,bounds,numParticles=500,maxIter=200,params=params)
+		P3opt = PSO(P4,x0,bounds,numParticles=500,maxIter=100,params=params)
 		results[n] = P3opt.optimize(verbose=True,getAllResults=True)
 	return results
 
@@ -204,14 +208,13 @@ def runPS4(xSizes, params):
 #bounds = [(-5,5)]*n
 
 # P3
-def plotPS4_3D(ps4Results):
+def plotPS4_3D(ps4Results, params):
 	x = linspace(0, 10, 100)
 	y = linspace(0, 10, 100)
 	X, Y = meshgrid(x, y)
 	Z = []
 	xx = X.flatten()
 	yy = Y.flatten()
-	params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.}
 	for idx in range(xx.size): 	
 		Z.append(P4(x=array([xx[idx], yy[idx]]),onlyFx=True))
 	Z = array(Z).reshape(X.shape)
@@ -232,12 +235,21 @@ def plotPS4_3D(ps4Results):
 	
 	plt.show()
 
+#params = {'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.}
 paramCombinations = [
 	{'w': 0.15, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.30, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
 	{'w': 0.5, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
 	{'w': 0.75, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
 	{'w': 0.8, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
-	#{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 0.5, 'c2': 3.5, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 1.5, 'c2': 2.5, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 2, 'c2': 32, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 2.5, 'c2': 1.5, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 3.5, 'c2': 3.5, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.},
+	{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 10.},
+	#{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.},
 	]
 def plotPS4_iter(paramCombinations=paramCombinations):
 	fig, ax = plt.subplots()
@@ -245,7 +257,7 @@ def plotPS4_iter(paramCombinations=paramCombinations):
 		ps4Results = runPS4([2],params)
 		ax.plot(ps4Results[2]['allCostVals'].T[-2],label='cIter: {} - w: {:.5f}, c1: {:.5f}, c2: {:.5f}, rho: {}'.format(*([ps4Results[2]['iter']]+[params[i] for i in ['w','c1','c2','penalty']])))
 	ax.legend()
-	ax.set_title('Objective Func. Val vs. Iteration')
+	ax.set_title('PS4 Bump Test - Objective Func. Val (w/ Quad. Penalty) vs. Iteration Number')
 	ax.set_xlabel('Iteration #')
 	ax.set_ylabel(r'$\pi(x,\rho)$')
 	ax.minorticks_on()
@@ -256,5 +268,5 @@ def plotPS4_iter(paramCombinations=paramCombinations):
 
 
 plotPS4_iter()
-#ps4Results = runPS4([2],{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-9, 'penalty': 5.})
+#ps4Results = runPS4([2],{'w': 0.7289, 'c1': 2.05*0.7289, 'c2': 2.05*0.7289, 'rel_tol': 1e-10, 'penalty': 5.})
 
