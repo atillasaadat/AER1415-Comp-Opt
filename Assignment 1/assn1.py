@@ -167,7 +167,7 @@ def P4(x,**kwargs):
 	t2 = prod(cos(x)**2)
 	t3 = sum((arange(len(x))+1)*x**2)
 	gx1 = 0.75 - prod(x)
-	gx2 = prod(x) - (7.5*len(x))
+	gx2 = sum(x) - (7.5*len(x))
 	fx = divide(-abs(t1-2*t2),sqrt(t3))
 	if isnan(fx):
 		fx = 0
