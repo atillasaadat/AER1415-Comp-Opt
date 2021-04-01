@@ -17,7 +17,6 @@ from mpl_toolkits import mplot3d
 from matplotlib import cm
 import matplotlib.colors as colors
 import scipy.io
-from IPython import embed
 
 from rosen import *
 
@@ -85,8 +84,6 @@ def BB(consts,verbose=False,plot=False):
 			break
 		
 		passConditions.append(passCond)
-		#if passCond:
-		#	embed()
 		x.append(x_k1)
 		vals.append(val_k1)
 		g.append(g_k1)

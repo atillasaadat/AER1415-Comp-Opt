@@ -16,7 +16,6 @@ from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 from matplotlib import cm
 import matplotlib.colors as colors
-from IPython import embed
 
 from rosen import *
 
